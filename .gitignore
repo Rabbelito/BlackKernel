@@ -41,7 +41,6 @@
 *.xz
 Module.symvers
 modules.builtin
-kernel.sh
 error.log
 out
 zip
