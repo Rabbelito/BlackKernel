@@ -47,48 +47,6 @@ echo -e "$green << cleanup >> \n $white"
 
 MAKE="./makeparallel"
 
-# Devices
-if [ "$DEVICE_TYPE" = courbet  ];
-then
-DEVICE="XIAOMI 11 LITE (OSS)"
-KERNEL_NAME="SLEEPY_KERNEL-OSS"
-CODENAME="COURBET"
-
-DEFCONFIG_COMMON="vendor/sdmsteppe-perf_defconfig"
-DEFCONFIG_DEVICE="vendor/courbet.config"
-
-AnyKernel="https://github.com/itsshashanksp/AnyKernel3.git"
-AnyKernelbranch="courbet"
-fi
-
-if [ "$DEVICE_TYPE" = davinci  ];
-then
-DEVICE="REDMI K20 (OSS)"
-KERNEL_NAME="SLEEPY_KERNEL-OSS"
-CODENAME="DAVINCI"
-
-DEFCONFIG_COMMON="vendor/sdmsteppe-perf_defconfig"
-DEFCONFIG_DEVICE="vendor/davinci.config"
-
-AnyKernel="https://github.com/itsshashanksp/AnyKernel3.git"
-AnyKernelbranch="davinci"
-fi
-
-if [ "$DEVICE_TYPE" = phoenix  ];
-then
-DEVICE="REDMI K30 & POCO X2 (OSS)"
-KERNEL_NAME="SLEEPY_KERNEL-OSS"
-CODENAME="PHOENIX"
-
-DEFCONFIG_COMMON="vendor/sdmsteppe-perf_defconfig"
-DEFCONFIG_DEVICE="vendor/phoenix.config"
-
-AnyKernel="https://github.com/itsshashanksp/AnyKernel3.git"
-AnyKernelbranch="phoenix"
-fi
-
-if [ "$DEVICE_TYPE" = sweet  ];
-then
 DEVICE="REDMI NOTE 10 PRO (OSS)"
 KERNEL_NAME="BLACK_KERNEL-OSS"
 CODENAME="SWEET"
@@ -98,33 +56,6 @@ DEFCONFIG_DEVICE="vendor/sweet.config"
 
 AnyKernel="https://github.com/kzorin52/BlackKernel_AnyKernel3"
 AnyKernelbranch="master"
-fi
-
-if [ "$DEVICE_TYPE" = sweetk6a  ];
-then
-DEVICE="REDMI NOTE 12 PRO 4G (OSS)"
-KERNEL_NAME="SLEEPY_KERNEL-OSS"
-CODENAME="SWEET-K6A"
-
-DEFCONFIG_COMMON="vendor/sdmsteppe-perf_defconfig"
-DEFCONFIG_DEVICE="vendor/sweetk6a.config"
-
-AnyKernel="https://github.com/itsshashanksp/AnyKernel3.git"
-AnyKernelbranch="sweetk6a"
-fi
-
-if [ "$DEVICE_TYPE" = violet  ];
-then
-DEVICE="REDMI NOTE 7 PRO (OSS)"
-KERNEL_NAME="SLEEPY_KERNEL-OSS"
-CODENAME="violet"
-
-DEFCONFIG_COMMON="vendor/sdmsteppe-perf_defconfig"
-DEFCONFIG_DEVICE="vendor/violet.config"
-
-AnyKernel="https://github.com/itsshashanksp/AnyKernel3.git"
-AnyKernelbranch="violet"
-fi
 
 # Kernel build release tag
 KRNL_REL_TAG="0"
@@ -168,27 +99,27 @@ tg_error() {
 
 # clang stuff
 		echo -e "$green << cloning clang >> \n $white"
-		git clone -q https://gitlab.com/PixelOS-Devices/playgroundtc.git --depth=1 -b 17  "$HOME"/clang
+		#git clone -q https://gitlab.com/PixelOS-Devices/playgroundtc.git --depth=1 -b 17  "$HOME"/clang
 
-	#export PATH="$HOME/clang/bin:$PATH"
-	export KBUILD_COMPILER_STRING=$(clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')
+	export PATH="/home/temnij/toolchains/neutron-clang/bin/:$PATH"
+	export KBUILD_COMPILER_STRING=$(/home/temnij/toolchains/neutron-clang/bin/clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')
 
 # Setup build process
 
 build_kernel() {
 Start=$(date +"%s")
 
-	make -j$(nproc --all) O=out \
+	ccache make -j$(nproc --all) O=out \
                               ARCH=arm64 \
                               LLVM=1 \
                               LLVM_IAS=1 \
-                              AR=llvm-ar \
-                              NM=llvm-nm \
-                              LD=ld.lld \
-                              OBJCOPY=llvm-objcopy \
-                              OBJDUMP=llvm-objdump \
-                              STRIP=llvm-strip \
-                              CC=clang \
+                              AR="/home/temnij/toolchains/neutron-clang/bin/llvm-ar" \
+                              NM="/home/temnij/toolchains/neutron-clang/bin/llvm-nm" \
+                              LD="/home/temnij/toolchains/neutron-clang/bin/ld.lld" \
+                              OBJCOPY="/home/temnij/toolchains/neutron-clang/bin/llvm-objcopy" \
+                              OBJDUMP="/home/temnij/toolchains/neutron-clang/bin/llvm-objdump" \
+                              STRIP="/home/temnij/toolchains/neutron-clang/bin/llvm-strip" \
+                              CC="/home/temnij/toolchains/neutron-clang/bin/clang" \
                               CLANG_TRIPLE=aarch64-linux-gnu- \
                               CROSS_COMPILE=aarch64-linux-android- \
                               CROSS_COMPILE_ARM32=arm-linux-androideabi-  2>&1 | tee error.log
@@ -199,10 +130,7 @@ Diff=$(($End - $Start))
 
 # Let's start
 echo -e "$green << doing pre-compilation process >> \n $white"
-export ARCH=arm64
-export SUBARCH=arm64
-export HEADER_ARCH=arm64
-
+./env.sh
 export KBUILD_BUILD_HOST="$HOSST"
 export KBUILD_BUILD_USER="$USEER"
 
